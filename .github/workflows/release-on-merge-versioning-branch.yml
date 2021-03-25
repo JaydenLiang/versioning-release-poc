@@ -1,0 +1,47 @@
+#
+name: >-
+  Run the post-merged actions from the versioning branches to the base branch.
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+jobs:
+  main_job:
+    runs-on: ubuntu-latest
+    name: process pull request merge event
+    # conditionally run only when the pull request is merged.
+    if: ggithub.event.pull_request.merged == true
+    steps:
+      - name: 'prep: git checkout'
+        uses: actions/checkout@v2
+      - name: 'prep: install dependencies'
+        run: npm ci
+      - name: build project
+        run: npm run build
+      - id: fetch-versioning-info
+        name: fetch versioning info
+        uses: JaydenLiang/github-actions-versioning-branch@1.0.1-dev.13
+        with:
+          pr-number: ${{ github.event.number }}
+      # create a release
+      - id: create-release
+        name: create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ steps['fetch-versioning-info'].outputs['head-version'] }} # Use the output from the `create-branch` step
+          release_name: ${{ steps['fetch-versioning-info'].outputs['head-version'] }} # Use the output from the `create-branch` step
+          draft: false
+          prerelease: ${{ steps['fetch-versioning-info'].outputs['is-prerelease'] == 'true' }} # Use the output from the `create-branch` step
+      - id: upload-release-asset
+        name: upload release assets
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps['fetch-versioning-info'].outputs['head-version'] }} # Use the output from the `create-branch` step
+          prerelease: ${{ steps['fetch-versioning-info'].outputs['is-prerelease'] == 'true' }} # Use the output from the `create-branch` step
+          file: ./release/*
+          file_glob: true
+          overwrite: true

@@ -119,3 +119,5 @@ typings/
 
 # project specific
 out
+dist
+release
