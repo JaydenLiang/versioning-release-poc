@@ -19,6 +19,8 @@ jobs:
         run: npm ci
       - name: build project
         run: npm run build
+      - name: make release assets
+        run: npm run make-release
       - id: fetch-versioning-info
         name: fetch versioning info
         uses: JaydenLiang/github-actions-versioning-branch@1.0.1-dev.16
