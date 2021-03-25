@@ -94,7 +94,6 @@ jobs:
           base-branch: ${{ github.event.inputs.base-branch }}
           head-branch: ${{ steps['create-branch'].outputs['head-branch'] }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: ${{ steps['create-branch'].outputs['is-prerelease'] }}
           pr-template-uri: ${{ github.event.inputs.pr-template-uri }}
           pr-create-draft: true
           pr-fail-if-exist: false
