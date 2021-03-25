@@ -1,5 +1,5 @@
 # this template is copied from .github/workflows/templates/versioning-pr.yml and is used as
-# an example for a predefined versioning branch pull request with assignees, reviwers and labels.
+# an example for a predefined versioning branch pull request with assignees, reviewers and labels.
 # available template place holders:
 # ${base-branch}
 # ${base-version}
