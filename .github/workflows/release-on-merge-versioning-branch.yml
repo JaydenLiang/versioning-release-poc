@@ -23,7 +23,7 @@ jobs:
         run: npm run make-release
       - id: fetch-versioning-info
         name: fetch versioning info
-        uses: JaydenLiang/github-actions-versioning-branch@1.0.1-dev.16
+        uses: fortinet/github-action-version-branch@1.0.0
         with:
           pr-number: ${{ github.event.number }}
           github-token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
