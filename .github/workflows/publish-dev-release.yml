@@ -17,14 +17,17 @@ jobs:
       pre-id: dev
     name: main job
     steps:
+      - name: preparation
+        id: prep
+        run: echo "::set-output name=base-branch::${GITHUB_REF#refs/heads/}" # output the ref of the trigger event as the base-branch
       - name: create release branch
         id: create-branch
-        uses: JaydenLiang/github-actions-versioning-branch@1.0.2
+        uses: JaydenLiang/github-actions-versioning-branch@1.0.4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          base-branch: ${GITHUB_REF#refs/heads/} # use the ref of the trigger event as the base-branch
+          base-branch: ${{ steps['prep'].outputs['base-branch'] }}
           name-prefix: devrel_
-          custom-version: ${{ github.event.inputs.base-branch }}
+          custom-version: ${{ github.event.inputs.custom-version }}
       - name: checkout dev release branch
         uses: actions/checkout@v2
         with:
@@ -45,9 +48,8 @@ jobs:
         # use the head version from the output of step: create-branch
         # use allow-same-version option
         run: |
-          npm version prerelease --preid=${{ github.event.inputs.pre_id }} -m " to %s for reasons"
+          npm version prerelease --preid=${{ github.event.inputs.pre_id }} -m "Bump version to %s"
           echo "::set-output name=tag_name::$(git describe)"
-          echo "::set-output name=release_name::$(git log -1  --pretty='%s')"
       - name: push changes
         # push commits only. Even though a tag is created, it will not be pushed.
         run: git push
@@ -64,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
           tag_name: ${{ steps['bump-version'].outputs.tag_name }} # Use the tag name from the output of the `bump-version` step
-          release_name: ${{ steps['bump-version'].outputs.release_name }} # Use the tag name from the output of the `bump-version` step
+          release_name: (dev release) ${{ steps['bump-version'].outputs.tag_name }} # Use the tag name from the output of the `bump-version` step
           draft: false
           prerelease: ${{ steps['create-branch'].outputs['is-prerelease'] == 'true' }} # Use the output from the `create-branch` step
       - id: upload-release-asset
