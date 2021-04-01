@@ -5,30 +5,26 @@ on:
   # Run by manual trigger
   workflow_dispatch:
     inputs:
-      base-branch:
+      custom-version:
         description: >-
-          The base branch that a dev release will be based.
+          The custom version to be used for branch, tag, and release. Do not use an existing tag in the repo.
         required: true
-      pre-id:
-        description: >-
-          The pre-release identifier.
-        required: true
-        default: 'dev'
 jobs:
   main_job:
     runs-on: ubuntu-latest
+    env:
+      version-level: prerelease
+      pre-id: dev
     name: main job
     steps:
-      - name: create dev release branch
+      - name: create release branch
         id: create-branch
-        uses: fortinet/github-action-version-branch@1.0.0
+        uses: JaydenLiang/github-actions-versioning-branch@1.0.1
         with:
-          base-branch: ${{ github.event.inputs.base-branch }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-branch: ${GITHUB_REF#refs/heads/} # use the ref of the trigger event as the base-branch
           name-prefix: devrel_
-          version-level: 'prerelease'
-          pre-id: ${{ github.event.inputs.pre-id }}
-      # checkout the release branch
+          custom-version: ${{ github.event.inputs.base-branch }}
       - name: checkout dev release branch
         uses: actions/checkout@v2
         with:
@@ -48,7 +44,10 @@ jobs:
         id: bump-version
         # use the head version from the output of step: create-branch
         # use allow-same-version option
-        run: npm version ${{ steps['create-branch'].outputs['head-version'] }} --allow-same-version
+        run: |
+          npm version prerelease --preid=${{ github.event.inputs.pre_id }} -m " to %s for reasons"
+          echo "::set-output name=tag_name::$(git describe)"
+          echo "::set-output name=release_name::$(git log -1  --pretty='%s')"
       - name: push changes
         # push commits only. Even though a tag is created, it will not be pushed.
         run: git push
@@ -64,8 +63,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ steps['create-branch'].outputs['head-version'] }} # Use the output from the `create-branch` step
-          release_name: ${{ steps['create-branch'].outputs['head-version'] }} # Use the output from the `create-branch` step
+          tag_name: ${{ steps['bump-version'].outputs.tag_name }} # Use the tag name from the output of the `bump-version` step
+          release_name: ${{ steps['bump-version'].outputs.release_name }} # Use the tag name from the output of the `bump-version` step
           draft: false
           prerelease: ${{ steps['create-branch'].outputs['is-prerelease'] == 'true' }} # Use the output from the `create-branch` step
       - id: upload-release-asset
