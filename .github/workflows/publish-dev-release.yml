@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: create release branch
         id: create-branch
-        uses: JaydenLiang/github-actions-versioning-branch@1.0.1
+        uses: JaydenLiang/github-actions-versioning-branch@1.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-branch: ${GITHUB_REF#refs/heads/} # use the ref of the trigger event as the base-branch
