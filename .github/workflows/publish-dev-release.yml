@@ -22,7 +22,7 @@ jobs:
         run: echo "::set-output name=base-branch::${GITHUB_REF#refs/heads/}" # output the ref of the trigger event as the base-branch
       - name: create release branch
         id: create-branch
-        uses: JaydenLiang/github-actions-versioning-branch@1.0.4
+        uses: JaydenLiang/github-actions-versioning-branch@1.0.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           base-branch: ${{ steps['prep'].outputs['base-branch'] }}
